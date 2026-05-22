@@ -25,15 +25,27 @@ interface PaginatedTransactions {
 export const useWalletStore = defineStore('wallet', () => {
   const dashboard = ref<DashboardData | null>(null)
   const transactions = ref<PaginatedTransactions | null>(null)
+  const loadingDashboard = ref(false)
+  const loadingTransactions = ref(false)
 
   async function fetchDashboard() {
-    const { data } = await api.get('/dashboard')
-    dashboard.value = data
+    loadingDashboard.value = true
+    try {
+      const { data } = await api.get('/dashboard')
+      dashboard.value = data
+    } finally {
+      loadingDashboard.value = false
+    }
   }
 
   async function fetchTransactions(params: Record<string, string | number> = {}) {
-    const { data } = await api.get('/transactions', { params })
-    transactions.value = data
+    loadingTransactions.value = true
+    try {
+      const { data } = await api.get('/transactions', { params })
+      transactions.value = data
+    } finally {
+      loadingTransactions.value = false
+    }
   }
 
   async function deposit(amount: number) {
@@ -46,5 +58,5 @@ export const useWalletStore = defineStore('wallet', () => {
     await fetchDashboard()
   }
 
-  return { dashboard, transactions, fetchDashboard, fetchTransactions, deposit, withdraw }
+  return { dashboard, transactions, loadingDashboard, loadingTransactions, fetchDashboard, fetchTransactions, deposit, withdraw }
 })

@@ -1,75 +1,79 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/auth'
 import { useWalletStore } from '@/stores/wallet'
+import { useToast } from '@/composables/useToast'
+import AppLayout from '@/components/AppLayout.vue'
+import { Wallet, TrendingUp, TrendingDown, ArrowDownCircle, ArrowUpCircle, Plus, Minus } from 'lucide-vue-next'
 
-const router = useRouter()
-const auth = useAuthStore()
 const wallet = useWalletStore()
+const toast = useToast()
 
 const amount = ref('')
-const feedback = ref('')
-const feedbackType = ref<'success' | 'error'>('success')
+const amountError = ref('')
 const loading = ref(false)
 
 onMounted(() => wallet.fetchDashboard())
 
 async function handleOperation(type: 'deposit' | 'withdraw') {
-  feedback.value = ''
+  amountError.value = ''
   const value = parseFloat(amount.value)
-  if (!value || value <= 0) {
-    feedback.value = 'Informe um valor válido.'
-    feedbackType.value = 'error'
+
+  if (!value || value < 0.01) {
+    amountError.value = 'Informe um valor mínimo de R$ 0,01.'
     return
   }
+
   loading.value = true
   try {
     if (type === 'deposit') await wallet.deposit(value)
     else await wallet.withdraw(value)
     amount.value = ''
-    feedback.value = type === 'deposit' ? 'Depósito realizado!' : 'Saque realizado!'
-    feedbackType.value = 'success'
+    toast.show(type === 'deposit' ? 'Depósito realizado com sucesso!' : 'Saque realizado com sucesso!')
   } catch (e: any) {
-    feedback.value = e.response?.data?.message ?? 'Erro na operação.'
-    feedbackType.value = 'error'
+    toast.show(e.response?.data?.message ?? 'Erro ao realizar operação.', 'error')
   } finally {
     loading.value = false
   }
 }
 
-async function handleLogout() {
-  await auth.logout()
-  router.push('/login')
-}
-
 function formatBRL(value: number) {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+function formatDate(dateStr: string) {
+  const parts = dateStr.split(' ')
+  const [y, m, d] = (parts[0] ?? '').split('-')
+  return `${d}/${m}/${y} ${parts[1] ?? ''}`
 }
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100">
-    <header class="bg-white shadow px-6 py-4 flex items-center justify-between">
-      <h1 class="text-lg font-bold text-gray-800">Wallet</h1>
-      <div class="flex items-center gap-4">
-        <RouterLink to="/transactions" class="text-sm text-blue-600 hover:underline">Histórico</RouterLink>
-        <button @click="handleLogout" class="text-sm text-gray-500 hover:text-gray-700">Sair</button>
-      </div>
-    </header>
+  <AppLayout>
+    <div v-if="wallet.loadingDashboard" class="flex justify-center items-center py-24">
+      <div class="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    </div>
 
-    <main class="max-w-2xl mx-auto px-4 py-8 space-y-6">
-      <div v-if="wallet.dashboard" class="grid grid-cols-3 gap-4">
+    <div v-else class="space-y-6">
+      <div v-if="wallet.dashboard" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div class="bg-white rounded-2xl shadow p-5">
-          <p class="text-xs text-gray-500 mb-1">Saldo atual</p>
+          <div class="flex items-center gap-1.5 mb-1">
+            <Wallet class="w-3.5 h-3.5 text-gray-400" />
+            <p class="text-xs text-gray-500">Saldo atual</p>
+          </div>
           <p class="text-2xl font-bold text-gray-800">{{ formatBRL(wallet.dashboard.balance) }}</p>
         </div>
         <div class="bg-white rounded-2xl shadow p-5">
-          <p class="text-xs text-gray-500 mb-1">Depositado no mês</p>
+          <div class="flex items-center gap-1.5 mb-1">
+            <TrendingUp class="w-3.5 h-3.5 text-green-500" />
+            <p class="text-xs text-gray-500">Depositado no mês</p>
+          </div>
           <p class="text-xl font-semibold text-green-600">{{ formatBRL(wallet.dashboard.deposited_month) }}</p>
         </div>
         <div class="bg-white rounded-2xl shadow p-5">
-          <p class="text-xs text-gray-500 mb-1">Sacado no mês</p>
+          <div class="flex items-center gap-1.5 mb-1">
+            <TrendingDown class="w-3.5 h-3.5 text-red-400" />
+            <p class="text-xs text-gray-500">Sacado no mês</p>
+          </div>
           <p class="text-xl font-semibold text-red-500">{{ formatBRL(wallet.dashboard.withdrawn_month) }}</p>
         </div>
       </div>
@@ -77,34 +81,37 @@ function formatBRL(value: number) {
       <div class="bg-white rounded-2xl shadow p-6">
         <h2 class="text-sm font-semibold text-gray-700 mb-4">Nova operação</h2>
 
-        <div class="flex gap-2 mb-3">
+        <div class="flex flex-col sm:flex-row gap-2 mb-1">
           <input
             v-model="amount"
             type="number"
             step="0.01"
             min="0.01"
             placeholder="R$ 0,00"
-            class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :class="amountError ? 'border-red-400 focus:ring-red-400' : 'border-gray-300 focus:ring-blue-500'"
+            class="w-full sm:flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
           />
-          <button
-            @click="handleOperation('deposit')"
-            :disabled="loading"
-            class="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
-          >
-            Depositar
-          </button>
-          <button
-            @click="handleOperation('withdraw')"
-            :disabled="loading"
-            class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50"
-          >
-            Sacar
-          </button>
+          <div class="flex gap-2">
+            <button
+              @click="handleOperation('deposit')"
+              :disabled="loading"
+              class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50"
+            >
+              <Plus class="w-3.5 h-3.5" />
+              {{ loading ? '...' : 'Depositar' }}
+            </button>
+            <button
+              @click="handleOperation('withdraw')"
+              :disabled="loading"
+              class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-600 disabled:opacity-50"
+            >
+              <Minus class="w-3.5 h-3.5" />
+              {{ loading ? '...' : 'Sacar' }}
+            </button>
+          </div>
         </div>
 
-        <p v-if="feedback" :class="feedbackType === 'success' ? 'text-green-600' : 'text-red-500'" class="text-sm">
-          {{ feedback }}
-        </p>
+        <p v-if="amountError" class="text-xs text-red-500 mt-1">{{ amountError }}</p>
       </div>
 
       <div class="bg-white rounded-2xl shadow p-6">
@@ -115,14 +122,18 @@ function formatBRL(value: number) {
             :key="tx.id"
             class="flex items-center justify-between py-3"
           >
-            <div>
-              <span
-                :class="tx.type === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'"
-                class="text-xs font-medium px-2 py-0.5 rounded-full"
+            <div class="flex items-center gap-2.5">
+              <div
+                :class="tx.type === 'credit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'"
+                class="w-8 h-8 rounded-full flex items-center justify-center shrink-0"
               >
-                {{ tx.type === 'credit' ? 'Crédito' : 'Débito' }}
-              </span>
-              <p class="text-xs text-gray-400 mt-1">{{ tx.created_at }}</p>
+                <ArrowDownCircle v-if="tx.type === 'credit'" class="w-4 h-4" />
+                <ArrowUpCircle v-else class="w-4 h-4" />
+              </div>
+              <div>
+                <p class="text-sm font-medium text-gray-700">{{ tx.type === 'credit' ? 'Crédito' : 'Débito' }}</p>
+                <p class="text-xs text-gray-400">{{ formatDate(tx.created_at) }}</p>
+              </div>
             </div>
             <div class="text-right">
               <p :class="tx.type === 'credit' ? 'text-green-600' : 'text-red-500'" class="font-semibold text-sm">
@@ -134,6 +145,6 @@ function formatBRL(value: number) {
         </div>
         <p v-else class="text-sm text-gray-400">Nenhuma transação ainda.</p>
       </div>
-    </main>
-  </div>
+    </div>
+  </AppLayout>
 </template>

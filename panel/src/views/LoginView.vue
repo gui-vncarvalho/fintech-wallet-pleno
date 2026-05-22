@@ -2,23 +2,26 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
 const auth = useAuthStore()
+const toast = useToast()
 
 const email = ref('')
 const password = ref('')
-const error = ref('')
+const hasError = ref(false)
 const loading = ref(false)
 
 async function submit() {
-  error.value = ''
+  hasError.value = false
   loading.value = true
   try {
     await auth.login(email.value, password.value)
     router.push('/')
   } catch (e: any) {
-    error.value = e.response?.data?.message ?? 'Erro ao fazer login.'
+    hasError.value = true
+    toast.show(e.response?.data?.message ?? 'Erro ao fazer login.', 'error')
   } finally {
     loading.value = false
   }
@@ -37,7 +40,8 @@ async function submit() {
             v-model="email"
             type="email"
             required
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :class="hasError ? 'border-red-400' : 'border-gray-300'"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
@@ -47,11 +51,10 @@ async function submit() {
             v-model="password"
             type="password"
             required
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :class="hasError ? 'border-red-400' : 'border-gray-300'"
+            class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
-
-        <p v-if="error" class="text-sm text-red-500">{{ error }}</p>
 
         <button
           type="submit"

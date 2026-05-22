@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
 
 const router = useRouter()
 const auth = useAuthStore()
+const toast = useToast()
 
 const name = ref('')
 const email = ref('')
@@ -21,6 +23,9 @@ async function submit() {
     router.push('/')
   } catch (e: any) {
     errors.value = e.response?.data?.errors ?? {}
+    if (!Object.keys(errors.value).length) {
+      toast.show(e.response?.data?.message ?? 'Erro ao criar conta.', 'error')
+    }
   } finally {
     loading.value = false
   }
