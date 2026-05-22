@@ -10,17 +10,22 @@ const toast = useToast()
 
 const email = ref('')
 const password = ref('')
-const hasError = ref(false)
+const fieldErrors = ref<Record<string, string>>({})
 const loading = ref(false)
 
 async function submit() {
-  hasError.value = false
+  fieldErrors.value = {}
+
+  if (!email.value.trim()) fieldErrors.value.email = 'Informe o e-mail.'
+  if (!password.value) fieldErrors.value.password = 'Informe a senha.'
+  if (Object.keys(fieldErrors.value).length) return
+
   loading.value = true
   try {
     await auth.login(email.value, password.value)
     router.push('/')
   } catch (e: any) {
-    hasError.value = true
+    fieldErrors.value.password = e.response?.data?.message ?? 'Credenciais inválidas.'
     toast.show(e.response?.data?.message ?? 'Erro ao fazer login.', 'error')
   } finally {
     loading.value = false
@@ -39,10 +44,10 @@ async function submit() {
           <input
             v-model="email"
             type="email"
-            required
-            :class="hasError ? 'border-red-400' : 'border-gray-300'"
+            :class="fieldErrors.email ? 'border-red-400' : 'border-gray-300'"
             class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p v-if="fieldErrors.email" class="text-xs text-red-500 mt-1">{{ fieldErrors.email }}</p>
         </div>
 
         <div>
@@ -50,10 +55,10 @@ async function submit() {
           <input
             v-model="password"
             type="password"
-            required
-            :class="hasError ? 'border-red-400' : 'border-gray-300'"
+            :class="fieldErrors.password ? 'border-red-400' : 'border-gray-300'"
             class="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <p v-if="fieldErrors.password" class="text-xs text-red-500 mt-1">{{ fieldErrors.password }}</p>
         </div>
 
         <button

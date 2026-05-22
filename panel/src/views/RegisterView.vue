@@ -17,6 +17,17 @@ const loading = ref(false)
 
 async function submit() {
   errors.value = {}
+
+  if (!name.value.trim()) errors.value.name = ['Informe o nome.']
+  if (!email.value.trim()) errors.value.email = ['Informe o e-mail.']
+  if (!password.value) errors.value.password = ['Informe a senha.']
+  if (!passwordConfirmation.value) {
+    errors.value.password_confirmation = ['Confirme a senha.']
+  } else if (passwordConfirmation.value !== password.value) {
+    errors.value.password_confirmation = ['As senhas não coincidem.']
+  }
+  if (Object.keys(errors.value).length) return
+
   loading.value = true
   try {
     await auth.register(name.value, email.value, password.value, passwordConfirmation.value)
@@ -43,7 +54,6 @@ async function submit() {
           <input
             v-model="name"
             type="text"
-            required
             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             :class="{ 'border-red-400': errors.name }"
           />
@@ -55,7 +65,6 @@ async function submit() {
           <input
             v-model="email"
             type="email"
-            required
             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             :class="{ 'border-red-400': errors.email }"
           />
@@ -67,7 +76,6 @@ async function submit() {
           <input
             v-model="password"
             type="password"
-            required
             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             :class="{ 'border-red-400': errors.password }"
           />
@@ -79,9 +87,10 @@ async function submit() {
           <input
             v-model="passwordConfirmation"
             type="password"
-            required
             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            :class="{ 'border-red-400': errors.password_confirmation }"
           />
+          <p v-if="errors.password_confirmation" class="text-xs text-red-500 mt-1">{{ errors.password_confirmation[0] }}</p>
         </div>
 
         <button
