@@ -10,12 +10,16 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::create([
-            'name'     => 'Usuário Teste',
-            'email'    => 'teste@wallet.com',
-            'password' => Hash::make('password'),
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'teste@wallet.com'],
+            [
+                'name'     => 'Usuário Teste',
+                'password' => Hash::make('password'),
+            ]
+        );
 
-        $user->wallet()->create(['balance' => 0]);
+        if (! $user->wallet()->exists()) {
+            $user->wallet()->create(['balance' => 0]);
+        }
     }
 }

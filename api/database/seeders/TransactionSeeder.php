@@ -19,6 +19,10 @@ class TransactionSeeder extends Seeder
     {
         $wallet = User::where('email', 'teste@wallet.com')->firstOrFail()->wallet;
 
+        if ($wallet->transactions()->exists()) {
+            return;
+        }
+
         $this->walletService->deposit($wallet, 500.00);
         $this->walletService->deposit($wallet, 250.50);
         $this->walletService->withdraw($wallet, 100.00);
