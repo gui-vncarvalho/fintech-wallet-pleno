@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('wallet_id')->constrained()->cascadeOnDelete();
             $table->enum('type', ['credit', 'debit']);
-            $table->decimal('amount', 15, 2);
-            $table->decimal('balance_after', 15, 2);
+            $table->unsignedBigInteger('amount');
+            $table->unsignedBigInteger('balance_after');
             $table->timestamps();
         });
     }
