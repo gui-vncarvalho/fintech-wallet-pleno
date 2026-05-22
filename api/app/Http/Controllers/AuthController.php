@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    /**
+     * Faz o registro do usuário e cria a carteira zerada.
+     *
+     * @param RegisterRequest $request
+     * @return JsonResponse
+     */
     public function register(RegisterRequest $request): JsonResponse
     {
         $user = User::create($request->validated());
@@ -24,6 +30,12 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * Efetua o login e cria um token de acesso.
+     *
+     * @param LoginRequest $request
+     * @return JsonResponse
+     */
     public function login(LoginRequest $request): JsonResponse
     {
         if (!Auth::attempt($request->only('email', 'password'))) {
@@ -39,6 +51,11 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * Efetua o logout e apaga o token de acesso.
+     *
+     * @return JsonResponse
+     */
     public function logout(): JsonResponse
     {
         Auth::user()->currentAccessToken()->delete();
