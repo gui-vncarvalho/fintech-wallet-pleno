@@ -36,6 +36,9 @@ class WalletService
 
     /**
      * Recebe o valor do saque, converte e salva.
+     * Coloquei um lock só pra garantir que a verificação e o saque são atômicos,
+     * evitando race condition onde dois saques simultâneos poderiam passar
+     * pelo check com o mesmo saldo desatualizado.
      *
      * @param Wallet $wallet
      * @param float $amount
@@ -46,18 +49,20 @@ class WalletService
     {
         $cents = Money::toCents($amount);
 
-        if ($wallet->balance < $cents) {
-            throw new InsufficientBalanceException();
-        }
-
         return DB::transaction(function () use ($wallet, $cents) {
-            $wallet->decrement('balance', $cents);
-            $wallet->refresh();
+            $locked = Wallet::lockForUpdate()->find($wallet->id);
 
-            return $wallet->transactions()->create([
+            if ($locked->balance < $cents) {
+                throw new InsufficientBalanceException();
+            }
+
+            $locked->decrement('balance', $cents);
+            $locked->refresh();
+
+            return $locked->transactions()->create([
                 'type'          => TransactionType::Debit,
                 'amount'        => $cents,
-                'balance_after' => $wallet->balance,
+                'balance_after' => $locked->balance,
             ]);
         });
     }
