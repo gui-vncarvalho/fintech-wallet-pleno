@@ -55,26 +55,26 @@ function formatDate(dateStr: string) {
 
     <div v-else class="space-y-6">
       <div v-if="wallet.dashboard" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-white rounded-2xl shadow p-5">
+        <div class="bg-white rounded-2xl shadow p-5 min-w-0">
           <div class="flex items-center gap-1.5 mb-1">
             <Wallet class="w-3.5 h-3.5 text-gray-400" />
             <p class="text-xs text-gray-500">Saldo atual</p>
           </div>
-          <p class="text-2xl font-bold text-gray-800">{{ formatBRL(wallet.dashboard.balance) }}</p>
+          <p class="text-2xl font-bold text-gray-800 truncate" :title="formatBRL(wallet.dashboard.balance)">{{ formatBRL(wallet.dashboard.balance) }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow p-5">
+        <div class="bg-white rounded-2xl shadow p-5 min-w-0">
           <div class="flex items-center gap-1.5 mb-1">
             <TrendingUp class="w-3.5 h-3.5 text-green-500" />
             <p class="text-xs text-gray-500">Depositado no mês</p>
           </div>
-          <p class="text-xl font-semibold text-green-600">{{ formatBRL(wallet.dashboard.deposited_month) }}</p>
+          <p class="text-xl font-semibold text-green-600 truncate" :title="formatBRL(wallet.dashboard.deposited_month)">{{ formatBRL(wallet.dashboard.deposited_month) }}</p>
         </div>
-        <div class="bg-white rounded-2xl shadow p-5">
+        <div class="bg-white rounded-2xl shadow p-5 min-w-0">
           <div class="flex items-center gap-1.5 mb-1">
             <TrendingDown class="w-3.5 h-3.5 text-red-400" />
             <p class="text-xs text-gray-500">Sacado no mês</p>
           </div>
-          <p class="text-xl font-semibold text-red-500">{{ formatBRL(wallet.dashboard.withdrawn_month) }}</p>
+          <p class="text-xl font-semibold text-red-500 truncate" :title="formatBRL(wallet.dashboard.withdrawn_month)">{{ formatBRL(wallet.dashboard.withdrawn_month) }}</p>
         </div>
       </div>
 
