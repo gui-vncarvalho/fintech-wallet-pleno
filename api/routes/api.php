@@ -14,8 +14,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index']);
 
-    Route::post('/wallet/deposit',  [WalletController::class, 'deposit']);
-    Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('/wallet/deposit',  [WalletController::class, 'deposit']);
+        Route::post('/wallet/withdraw', [WalletController::class, 'withdraw']);
+    });
 
     Route::get('/transactions', [TransactionController::class, 'index']);
 });

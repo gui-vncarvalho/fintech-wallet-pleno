@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,8 +19,8 @@ class TransactionResource extends JsonResource
         return [
             'id'            => $this->id,
             'type'          => $this->type->value,
-            'amount'        => $this->amount / 100,
-            'balance_after' => $this->balance_after / 100,
+            'amount'        => Money::toDecimal($this->amount),
+            'balance_after' => Money::toDecimal($this->balance_after),
             'created_at'    => $this->created_at->toDateTimeString(),
         ];
     }

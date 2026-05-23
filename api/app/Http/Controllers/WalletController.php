@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exceptions\InsufficientBalanceException;
 use App\Http\Requests\DepositRequest;
 use App\Http\Requests\WithdrawRequest;
+use App\Http\Resources\TransactionResource;
 use App\Services\WalletService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class WalletController extends Controller
             $request->float('amount'),
         );
 
-        return response()->json($transaction->load('wallet'), 201);
+        return TransactionResource::make($transaction)->response()->setStatusCode(201);
     }
 
     /**
@@ -46,6 +47,6 @@ class WalletController extends Controller
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
-        return response()->json($transaction->load('wallet'), 201);
+        return TransactionResource::make($transaction)->response()->setStatusCode(201);
     }
 }

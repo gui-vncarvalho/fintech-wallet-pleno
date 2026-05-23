@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\TransactionType;
 use App\Http\Resources\TransactionResource;
+use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -37,9 +38,9 @@ class DashboardController extends Controller
             ->get();
 
         return response()->json([
-            'balance'          => $wallet->balance / 100,
-            'deposited_month'  => $deposited / 100,
-            'withdrawn_month'  => $withdrawn / 100,
+            'balance'           => Money::toDecimal($wallet->balance),
+            'deposited_month'   => Money::toDecimal($deposited),
+            'withdrawn_month'   => Money::toDecimal($withdrawn),
             'last_transactions' => TransactionResource::collection($lastTransactions),
         ]);
     }

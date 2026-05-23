@@ -6,6 +6,7 @@ use App\Enums\TransactionType;
 use App\Exceptions\InsufficientBalanceException;
 use App\Models\Transaction;
 use App\Models\Wallet;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
 class WalletService
@@ -19,7 +20,7 @@ class WalletService
      */
     public function deposit(Wallet $wallet, float $amount): Transaction
     {
-        $cents = $this->toCents($amount);
+        $cents = Money::toCents($amount);
 
         return DB::transaction(function () use ($wallet, $cents) {
             $wallet->increment('balance', $cents);
@@ -43,7 +44,7 @@ class WalletService
      */
     public function withdraw(Wallet $wallet, float $amount): Transaction
     {
-        $cents = $this->toCents($amount);
+        $cents = Money::toCents($amount);
 
         if ($wallet->balance < $cents) {
             throw new InsufficientBalanceException();
@@ -59,16 +60,5 @@ class WalletService
                 'balance_after' => $wallet->balance,
             ]);
         });
-    }
-
-    /**
-     * Converte para centavos
-     *
-     * @param float $amount
-     * @return int
-     */
-    private function toCents(float $amount): int
-    {
-        return (int) round($amount * 100);
     }
 }
