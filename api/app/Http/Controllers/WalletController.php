@@ -35,17 +35,14 @@ class WalletController extends Controller
      *
      * @param WithdrawRequest $request
      * @return JsonResponse
+     * @throws InsufficientBalanceException
      */
     public function withdraw(WithdrawRequest $request): JsonResponse
     {
-        try {
-            $transaction = $this->walletService->withdraw(
-                Auth::user()->wallet,
-                $request->float('amount'),
-            );
-        } catch (InsufficientBalanceException $e) {
-            return response()->json(['message' => $e->getMessage()], 422);
-        }
+        $transaction = $this->walletService->withdraw(
+            Auth::user()->wallet,
+            $request->float('amount'),
+        );
 
         return TransactionResource::make($transaction)->response()->setStatusCode(201);
     }
